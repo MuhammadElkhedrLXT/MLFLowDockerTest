@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:14.23
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+      POSTGRES_DB: mlflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest-full
+    depends_on:
+      - postgres
+    ports:
+      - "5000:5000"
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql://mlflow:mlflow@postgres:5432/mlflow
+      MLFLOW_ARTIFACT_ROOT: /mlflow/artifacts
+      MLFLOW_TARGET_URI: http://localhost:5000
+    volumes:
+      - mlflow-artifacts:/mlflow/artifacts
+    command: [
+      "sh", "-c",
+      "mlflow server --backend-store-uri $$MLFLOW_BACKEND_STORE_URI --artifacts-destination $$MLFLOW_ARTIFACT_ROOT --host 0.0.0.0"
+    ]
+volumes:
+  postgres-data:
+  mlflow-artifacts:
